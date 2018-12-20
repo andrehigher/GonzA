@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+import timeit
 import operator
 import networkx as nx
 import argparse
@@ -17,7 +18,8 @@ if __name__ == "__main__":
     #                     help='sum the integers (default: find the max)')
     # args = parser.parse_args()
     # print(args.accumulate(args.integers))
-    
+
+    start = timeit.default_timer()
     DG = nx.Graph()
     util = Util()
     graph = GonzA(DG)
@@ -28,9 +30,13 @@ if __name__ == "__main__":
            
     g = graph.get_graph()
     L = 3
-    NUMBER_OF_TESTS = 5
+    NUMBER_OF_TESTS = 200
 
     MMR = 0.0
+    HITS_1 = 0.0
+    HITS_3 = 0.0
+    HITS_5 = 0.0
+    HITS_10 = 0.0
     for i in range(0,NUMBER_OF_TESTS):
         
         v1 = choice(g.nodes())
@@ -61,4 +67,10 @@ if __name__ == "__main__":
         print final_distribution_sorted
         print 'MMR updated', MMR
 
-    print 'Final MMR: ', (MMR/NUMBER_OF_TESTS)
+    stop = timeit.default_timer()
+    print 'Final HITS@1', (graph.get_hits1() / NUMBER_OF_TESTS)
+    print 'Final HITS@3', (graph.get_hits3() / NUMBER_OF_TESTS)
+    print 'Final HITS@5', (graph.get_hits5() / NUMBER_OF_TESTS)
+    print 'Final HITS@10', (graph.get_hits10() / NUMBER_OF_TESTS)
+    print 'Final MMR: ', (MMR / NUMBER_OF_TESTS)
+    print 'Final Time:', stop - start

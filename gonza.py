@@ -15,6 +15,10 @@ class GonzA():
         self.__graph = graph
         self.__relations = {}
         self.__relations_distribution = defaultdict(int)
+        self.__hits1 = 0.0
+        self.__hits3 = 0.0
+        self.__hits5 = 0.0
+        self.__hits10 = 0.0
 
     def clear(self):
         """ Clear current graph
@@ -30,6 +34,26 @@ class GonzA():
         """ A method to get graph.
         """
         return self.__graph
+
+    def get_hits1(self):
+        """ A method to get hits1.
+        """
+        return self.__hits1
+
+    def get_hits3(self):
+        """ A method to get hits3.
+        """
+        return self.__hits3
+
+    def get_hits5(self):
+        """ A method to get hits5.
+        """
+        return self.__hits5
+
+    def get_hits10(self):
+        """ A method to get hits10.
+        """
+        return self.__hits10
 
     def set_relation(self, source, target, relation):
         """ A method to set an edge label.
@@ -93,7 +117,12 @@ class GonzA():
                                                 if len(key) > 3:
                                                     for neighbor3 in g.neighbors(neighbor2):
                                                          if key[3] == self.get_relation(neighbor2, neighbor3):
-                                                             dicti[self.get_relation(edge[0], neighbor3)] += 1
+                                                            if len(key) > 4:
+                                                                 for neighbor4 in g.neighbors(neighbor3):
+                                                                    if key[4] == self.get_relation(neighbor3, neighbor4):
+                                                                        dicti[self.get_relation(edge[0], neighbor4)] += 1
+                                                            else:
+                                                                dicti[self.get_relation(edge[0], neighbor3)] += 1
                                                 else:
                                                     dicti[self.get_relation(edge[0], neighbor2)] += 1
                                     else:
@@ -138,9 +167,25 @@ class GonzA():
             elif relation != None:
                 count += 1.0
         if count == 0:
-            count = 1
-        MMR += (1.0/count)
+            count = 20.0
+        else:
+            MMR += (1.0/count)
+        
+        self.update_hits(count)
         return MMR
+
+    def update_hits(self, count):
+        """ Evaluate Hits.
+        """
+        if count == 1:
+            self.__hits1 += 1
+        if count <= 3:
+            self.__hits3 += 1
+        if count <= 5:
+            self.__hits5 += 1
+        if count <= 10:
+            self.__hits10 += 1
+        
 
     def calculate_entropy(self, source, target):
         """ Calculates the entropy from source and target.
