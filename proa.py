@@ -7,7 +7,7 @@ from random import choice
 from collections import defaultdict
 import networkx as nx
 
-class GonzA():
+class ProA():
 
     def __init__(self, graph):
         """ Initializes util object.
@@ -89,15 +89,32 @@ class GonzA():
         """
         paths = nx.all_simple_paths(self.__graph, source, target, cutoff=length)
         paths = list(paths)
+        print 'len', len(paths)
         distribution = defaultdict(int)
         for path in paths:
             relations_list = list()
             for i in range(0, len(path) - 1):
+                # print path[i], path[i + 1], self.get_relation(path[i], path[i+1])
                 relations_list.append(self.get_relation(path[i], path[i+1]))
+            # print 'list', relations_list
             distribution[tuple(relations_list)] += 1
         return distribution
 
-    def generate_edges_between_paths(self, distribution):
+    def recur_generate_paths(self, g, node_initial, node_source, node_target, distribution, key, index, dicti, source, target):
+        """ Recursive method do generate dictionary from exists edges between v1 and v2 until the limit passed.
+        """
+        if key[index] == self.get_relation(node_source, node_target):
+            index = index + 1
+            if len(key) > index:
+                for neighbor in g.neighbors(node_target):
+                    self.recur_generate_paths(g, node_initial, node_target, neighbor, distribution, key, index, dicti, source, target)
+            else:
+                if source == node_initial and target == node_target:
+                    pass
+                else:
+                    dicti[self.get_relation(node_initial, node_target)] += 1
+
+    def generate_edges_between_paths(self, distribution, source, target):
         """ Generate dictionary from exists edges between v1 and v2.
         """
         path_distribution = {}
@@ -107,28 +124,7 @@ class GonzA():
             dicti = defaultdict(int)
             for edge in g.edges():
                 try:
-                    if key[0] == self.get_relation(edge[0], edge[1]):
-                        if len(key) > 1:
-                            for neighbor in g.neighbors(edge[1]):
-                                if key[1] == self.get_relation(edge[1], neighbor):
-                                    if len(key) > 2:
-                                        for neighbor2 in g.neighbors(neighbor):
-                                            if key[2] == self.get_relation(neighbor, neighbor2):
-                                                if len(key) > 3:
-                                                    for neighbor3 in g.neighbors(neighbor2):
-                                                         if key[3] == self.get_relation(neighbor2, neighbor3):
-                                                            if len(key) > 4:
-                                                                 for neighbor4 in g.neighbors(neighbor3):
-                                                                    if key[4] == self.get_relation(neighbor3, neighbor4):
-                                                                        dicti[self.get_relation(edge[0], neighbor4)] += 1
-                                                            else:
-                                                                dicti[self.get_relation(edge[0], neighbor3)] += 1
-                                                else:
-                                                    dicti[self.get_relation(edge[0], neighbor2)] += 1
-                                    else:
-                                        dicti[self.get_relation(edge[1], neighbor)] += 1
-                        else:
-                            dicti[self.get_relation(edge[0], edge[1])] += 1
+                    self.recur_generate_paths(g, edge[0], edge[0], edge[1], distribution, key, 0, dicti, source, target)
                 except IndexError:
                     pass
             path_distribution[key] = dicti
@@ -161,7 +157,7 @@ class GonzA():
             print 'Predicting', relation
             if relation == edge_to_be_predicted:
                 count += 1.0
-                break;
+                break
             if relation == None and probability > 0.92:
                 count += 1.0
             elif relation != None:

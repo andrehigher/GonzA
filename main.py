@@ -4,9 +4,9 @@ import timeit
 import operator
 import networkx as nx
 import argparse
+import random
 from util import Util
-from gonza import GonzA
-from random import choice
+from proa import ProA
 from collections import defaultdict
 
 if __name__ == "__main__":
@@ -22,15 +22,16 @@ if __name__ == "__main__":
     start = timeit.default_timer()
     DG = nx.Graph()
     util = Util()
-    graph = GonzA(DG)
+    graph = ProA(DG)
 
     util.read_file('dataset/fb15k/train.txt', graph)
+
     # util.read_file('dataset/wn18/train.txt', graph)
     # util.read_file('dataset/nell/nell_cleaned.txt', graph)
            
     g = graph.get_graph()
     L = 3
-    NUMBER_OF_TESTS = 200
+    NUMBER_OF_TESTS = 500
 
     MMR = 0.0
     HITS_1 = 0.0
@@ -39,9 +40,20 @@ if __name__ == "__main__":
     HITS_10 = 0.0
     for i in range(0,NUMBER_OF_TESTS):
         
-        v1 = choice(g.nodes())
-        v2 = choice(g.neighbors(v1))
+        v1 = random.choice(list(g.nodes))
+        v2 = random.choice(list(g.neighbors(v1)))
+        # v2 = random.choice(list(g.nodes))
+
+        # v1 = '/m/0kvtr' # Anarcho Punk
+        # v2 = '/m/0fwc0' # Norfolk
+
+        # v1 = '/m/063zky' # The Jetsons meet the flinstones
+        # v2 = '/m/02l7c8' # Romance genre
+        # v2 = '/m/017fp' # Biography genre
         edge_to_be_predicted = graph.get_relation(v1, v2)
+        # v1 = 'Morgan_Freeman'
+        # v2 = 'Oscar'
+
         print v1, v2, graph.get_relation(v1, v2)
         g.remove_edge(v1,v2)
 
@@ -49,20 +61,20 @@ if __name__ == "__main__":
         distribution = graph.generate_distribution(v1, v2, L)
 
         # Walk over found paths and generate dictionary from ocurrence edges between v1 and v2
-        distribution_path = graph.generate_edges_between_paths(distribution)
+        distribution_path = graph.generate_edges_between_paths(distribution, v1, v2)
 
         # Get both distribution calculated above and 
         final_distribution = graph.generate_final_distribution(distribution, distribution_path)
 
         # Get domain from most outgoing edges from source
-        domain = graph.get_domain(v1)
+        # domain = graph.get_domain(v1)
 
         # Sort final distribution
         final_distribution_sorted = sorted(final_distribution.items(), key=operator.itemgetter(1), reverse=True)
 
         # Evaluate
         MMR = graph.evaluate(MMR, final_distribution_sorted, edge_to_be_predicted)
-        g.add_edge(v1, v2,{'relation':edge_to_be_predicted})
+        g.add_edge(v1, v2, relation=edge_to_be_predicted)
         graph.set_relation(v1, v2, edge_to_be_predicted)
         print final_distribution_sorted
         print 'MMR updated', MMR
